@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Мой To-Do List</title>
+    <style>
+        /* (Все стили остаются прежними, добавляем только новые для кнопки редактирования) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f9;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+            color: #333;
+        }
+        .app-container {
+            background-color: white;
+            width: 100%;
+            max-width: 500px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 25px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+        }
+        .input-container {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        #new-task-input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+        #new-task-input:focus {
+            border-color: #3498db;
+        }
+        #add-task-btn {
+            padding: 12px 20px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        #add-task-btn:hover {
+            background-color: #2980b9;
+        }
+        #tasks-container {
+            list-style-type: none;
+            padding: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            margin-bottom: 10px;
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .task-text {
+            flex: 1;
+            margin-right: 15px;
+            word-break: break-word;
+        }
+        /* Стиль для поля ввода при редактировании */
+        .edit-input {
+            flex: 1;
+            margin-right: 15px;
+            padding: 8px 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .task-item.completed {
+            border-left-color: #27ae60;
+            opacity: 0.8;
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+            color: #7f8c8d;
+        }
+        .task-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .task-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: opacity 0.2s ease;
+        }
+        .delete-btn {
+            background-color: #e74c3c;
+            color: white;
+        }
+        .complete-btn {
+            background-color: #2ecc71;
+            color: white;
+        }
+        /* Новая кнопка "Изменить" */
+        .edit-btn {
+            background-color: #f39c12; /* Оранжевый цвет для различия */
+            color: white;
+        }
+        /* Кнопка "Сохранить" при редактировании */
+        .save-btn {
+            background-color: #3498db;
+            color: white;
+        }
+        .task-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>Мой Список Дела</h1>
+        <div class="input-container">
+            <input type="text" id="new-task-input" placeholder="Напишите новую задачу...">
+            <button id="add-task-btn">Добавить</button>
+        </div>
+        <ul id="tasks-container">
+            <!-- Задачи будут добавляться здесь -->
+        </ul>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.getElementById('new-task-input');
+            const addTaskButton = document.getElementById('add-task-btn');
+            const tasksContainer = document.getElementById('tasks-container');
+
+            // Функция для создания новой задачи
+            function createNewTask(taskText) {
+                const taskItem = document.createElement('li');
+                taskItem.classList.add('task-item');
+
+                // Контейнер для текста или поля редактирования
+                const taskContent = document.createElement('div');
+                taskContent.style.flex = '1'; // Занимает всё доступное место
+                taskContent.style.marginRight = '15px';
+
+                // Элемент для отображения текста задачи
+                const taskTextElement = document.createElement('span');
+                taskTextElement.classList.add('task-text');
+                taskTextElement.textContent = taskText;
+
+                // Поле для редактирования (изначально скрыто)
+                const editInput = document.createElement('input');
+                editInput.type = 'text';
+                editInput.classList.add('edit-input');
+                editInput.value = taskText;
+                editInput.style.display = 'none'; // По умолчанию скрыто
+
+                // Добавляем текст и поле ввода в контейнер
+                taskContent.appendChild(taskTextElement);
+                taskContent.appendChild(editInput);
+
+                const taskActions = document.createElement('div');
+                taskActions.classList.add('task-actions');
+
+                // Кнопка "Готово"
+                const completeButton = document.createElement('button');
+                completeButton.classList.add('task-btn', 'complete-btn');
+                completeButton.textContent = 'Готово';
+                completeButton.addEventListener('click', function() {
+                    taskItem.classList.toggle('completed');
+                    completeButton.textContent = taskItem.classList.contains('completed') ? 'Вернуть' : 'Готово';
+                });
+
+                // Кнопка "Изменить"
+                const editButton = document.createElement('button');
+                editButton.classList.add('task-btn', 'edit-btn');
+                editButton.textContent = 'Изменить';
+                editButton.addEventListener('click', function() {
+                    // Переключаем режим редактирования
+                    const isEditing = taskTextElement.style.display === 'none';
+
+                    if (isEditing) {
+                        // Сохраняем изменения
+                        taskTextElement.textContent = editInput.value;
+                        taskTextElement.style.display = 'inline';
+                        editInput.style.display = 'none';
+                        editButton.textContent = 'Изменить';
+                        // Включаем другие кнопки
+                        completeButton.disabled = false;
+                        deleteButton.disabled = false;
+                    } else {
+                        // Включаем режим редактирования
+                        editInput.value = taskTextElement.textContent;
+                        taskTextElement.style.display = 'none';
+                        editInput.style.display = 'block';
+                        editButton.textContent = 'Сохранить';
+                        // Отключаем другие кнопки на время редактирования
+                        completeButton.disabled = true;
+                        deleteButton.disabled = true;
+                        // Фокус на поле ввода
+                        editInput.focus();
+                    }
+                });
+
+                // Кнопка "Удалить"
+                const deleteButton = document.createElement('button');
+                deleteButton.classList.add('task-btn', 'delete-btn');
+                deleteButton.textContent = 'Удалить';
+                deleteButton.addEventListener('click', function() {
+                    tasksContainer.removeChild(taskItem);
+                });
+
+                // Собираем всё вместе
+                taskActions.appendChild(completeButton);
+                taskActions.appendChild(editButton); // Добавляем кнопку "Изменить"
+                taskActions.appendChild(deleteButton);
+
+                taskItem.appendChild(taskContent);
+                taskItem.appendChild(taskActions);
+                tasksContainer.appendChild(taskItem);
+            }
+
+            // Функция добавления задачи
+            function addTask() {
+                const taskText = taskInput.value.trim();
+                if (taskText === '') {
+                    alert('Пожалуйста, введите текст задачи!');
+                    return;
+                }
+                createNewTask(taskText);
+                taskInput.value = '';
+                taskInput.focus();
+            }
+
+            // Обработчики событий
+            addTaskButton.addEventListener('click', addTask);
+            taskInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
