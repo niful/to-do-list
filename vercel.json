@@ -2,7 +2,7 @@
     "routes":[
         {
             "src":"/",
-            "dest":"/cms.html"
+            "dest":"/to%20do%20list.html"
         }
     ]
 }
